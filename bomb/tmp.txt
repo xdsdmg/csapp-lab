@@ -1,0 +1,8 @@
+$rsi 0x7fffffffdc50
+$rsp 0x7fffffffdc50
+
+read_six_numbers:
+$rsp 0x7fffffffdc48
+$rax 0x7fffffffdc64
+
+0x400f0a
