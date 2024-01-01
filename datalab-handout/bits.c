@@ -166,9 +166,8 @@ int tmin(void)
  */
 int isTmax(int x)
 {
-  int tmax = ~(1 << 31);
-  int y = x ^ tmax;
-  return !y;
+  int a = x + 1;
+  return !(a ^ (~a + 1)) & !!(a ^ 0);
 }
 /*
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
@@ -211,8 +210,11 @@ int negate(int x)
  */
 int isAsciiDigit(int x)
 {
-  return !(x ^ 0x30) | !(x ^ 0x31) | !(x ^ 0x32) | !(x ^ 0x33) | !(x ^ 0x34) |
-         !(x ^ 0x35) | !(x ^ 0x36) | !(x ^ 0x37) | !(x ^ 0x38) | !(x ^ 0x39);
+  int flag_0 = !(x >> 31);
+  int flag_1 = !((x + (~0x30 + 1)) >> 31);
+  int flag_2 = (x + (~0x3A + 1)) >> 31;
+
+  return flag_0 & flag_1 & flag_2;
 }
 /*
  * conditional - same as x ? y : z
@@ -223,11 +225,11 @@ int isAsciiDigit(int x)
  */
 int conditional(int x, int y, int z)
 {
-  x = !!x;
-  int x_ = !x;
+  int a = !!x;
+  int b = !x;
 
-  int m = ~x + 1;
-  int n = ~x_ + 1;
+  int m = ~a + 1;
+  int n = ~b + 1;
 
   return (y & m) + (z & n);
 }
@@ -263,54 +265,10 @@ int isLessOrEqual(int x, int y)
  */
 int logicalNeg(int x)
 {
-  int x_00 = x & 1;
-  int x_01 = (x >> 1) & 1;
-  int x_02 = (x >> 2) & 1;
-  int x_03 = (x >> 3) & 1;
-  int x_04 = (x >> 4) & 1;
+  int is_negative = x >> 31;
+  int is_positive = (~x + 1) >> 31;
 
-  int x_05 = (x >> 5) & 1;
-  int x_06 = (x >> 6) & 1;
-  int x_07 = (x >> 7) & 1;
-  int x_08 = (x >> 8) & 1;
-  int x_09 = (x >> 9) & 1;
-
-  int x_10 = (x >> 10) & 1;
-  int x_11 = (x >> 11) & 1;
-  int x_12 = (x >> 12) & 1;
-  int x_13 = (x >> 13) & 1;
-  int x_14 = (x >> 14) & 1;
-
-  int x_15 = (x >> 15) & 1;
-  int x_16 = (x >> 16) & 1;
-  int x_17 = (x >> 17) & 1;
-  int x_18 = (x >> 18) & 1;
-  int x_19 = (x >> 19) & 1;
-
-  int x_20 = (x >> 20) & 1;
-  int x_21 = (x >> 21) & 1;
-  int x_22 = (x >> 22) & 1;
-  int x_23 = (x >> 23) & 1;
-  int x_24 = (x >> 24) & 1;
-
-  int x_25 = (x >> 25) & 1;
-  int x_26 = (x >> 26) & 1;
-  int x_27 = (x >> 27) & 1;
-  int x_28 = (x >> 28) & 1;
-  int x_29 = (x >> 29) & 1;
-
-  int x_30 = (x >> 30) & 1;
-  int x_31 = (x >> 31) & 1;
-
-  int y = x_00 | x_01 | x_02 | x_03 | x_04 |
-          x_05 | x_06 | x_07 | x_08 | x_09 |
-          x_10 | x_11 | x_12 | x_13 | x_14 |
-          x_15 | x_16 | x_17 | x_18 | x_19 |
-          x_20 | x_21 | x_22 | x_23 | x_24 |
-          x_25 | x_26 | x_27 | x_28 | x_29 |
-          x_30 | x_31;
-
-  return ~y & 1;
+  return ~(is_negative | is_positive) & 1;
 }
 /* howManyBits - return the minimum number of bits required to represent x in
  *             two's complement
@@ -326,128 +284,65 @@ int logicalNeg(int x)
  */
 int howManyBits(int x)
 {
-  int is_lte_0 = ((x >> 31) & 1) | (!(x ^ 0));
+  int shadow = 0;
+  int cond_0 = 0;
+  int cond_1 = 0;
+  int offset = 0;
+  int offset_32 = 32;
+  int offset_16 = 16;
+  int offset_08 = 8;
+  int offset_04 = 4;
+  int offset_02 = 2;
+  int offset_01 = 1;
+  int index = 0;
+  int x_tmp = 0;
+  int flag = 0;
 
-  int ret = 0;
-  {
-    int y = x;
-    int z = ~x + 1;
+  shadow = (x & (1 << 31)) >> 31;
+  cond_0 = ~x & shadow;
+  cond_1 = x & ~shadow;
+  x = cond_0 + cond_1;
 
-    int is_gt_0 = !is_lte_0;
-    int m = ~is_gt_0 + 1;
-    int n = ~is_lte_0 + 1;
+  x_tmp = x >> offset_16;
+  flag = !(x_tmp);
+  shadow = (flag << 31) >> 31;
+  cond_0 = offset_16 & shadow;
+  cond_1 = offset_32 & ~shadow;
+  index = cond_0 + cond_1;
 
-    ret = (y & m) + (z & n);
-  }
-  x = ret;
+  offset = index + (~offset_08 + 1);
+  x_tmp = x >> offset;
+  flag = !(x_tmp);
+  shadow = (flag << 31) >> 31;
+  cond_0 = offset & shadow;
+  cond_1 = index & ~shadow;
+  index = cond_0 + cond_1;
 
-  int top_digit_index = 0;
-  {
-    int x_00 = !!x;
-    int x_01 = !!(x >> 1);
-    int x_02 = !!(x >> 2);
-    int x_03 = !!(x >> 3);
-    int x_04 = !!(x >> 4);
+  offset = index + (~offset_04 + 1);
+  x_tmp = x >> offset;
+  flag = !(x_tmp);
+  shadow = (flag << 31) >> 31;
+  cond_0 = offset & shadow;
+  cond_1 = index & ~shadow;
+  index = cond_0 + cond_1;
 
-    int x_05 = !!(x >> 5);
-    int x_06 = !!(x >> 6);
-    int x_07 = !!(x >> 7);
-    int x_08 = !!(x >> 8);
-    int x_09 = !!(x >> 9);
+  offset = index + (~offset_02 + 1);
+  x_tmp = x >> offset;
+  flag = !(x_tmp);
+  shadow = (flag << 31) >> 31;
+  cond_0 = offset & shadow;
+  cond_1 = index & ~shadow;
+  index = cond_0 + cond_1;
 
-    int x_10 = !!(x >> 10);
-    int x_11 = !!(x >> 11);
-    int x_12 = !!(x >> 12);
-    int x_13 = !!(x >> 13);
-    int x_14 = !!(x >> 14);
+  offset = index + (~offset_01 + 1);
+  x_tmp = x >> offset;
+  flag = !(x_tmp);
+  shadow = (flag << 31) >> 31;
+  cond_0 = offset & shadow;
+  cond_1 = index & ~shadow;
+  index = cond_0 + cond_1;
 
-    int x_15 = !!(x >> 15);
-    int x_16 = !!(x >> 16);
-    int x_17 = !!(x >> 17);
-    int x_18 = !!(x >> 18);
-    int x_19 = !!(x >> 19);
-
-    int x_20 = !!(x >> 20);
-    int x_21 = !!(x >> 21);
-    int x_22 = !!(x >> 22);
-    int x_23 = !!(x >> 23);
-    int x_24 = !!(x >> 24);
-
-    int x_25 = !!(x >> 25);
-    int x_26 = !!(x >> 26);
-    int x_27 = !!(x >> 27);
-    int x_28 = !!(x >> 28);
-    int x_29 = !!(x >> 29);
-
-    int x_30 = !!(x >> 30);
-    int x_31 = !!(x >> 31);
-
-    top_digit_index = x_00 + x_01 + x_02 + x_03 + x_04 +
-                      x_05 + x_06 + x_07 + x_08 + x_09 +
-                      x_10 + x_11 + x_12 + x_13 + x_14 +
-                      x_15 + x_16 + x_17 + x_18 + x_19 +
-                      x_20 + x_21 + x_22 + x_23 + x_24 +
-                      x_25 + x_26 + x_27 + x_28 + x_29 +
-                      x_30 + x_31;
-  }
-
-  int bit_1_num = 0;
-  {
-    int x_00 = x & 1;
-    int x_01 = (x >> 1) & 1;
-    int x_02 = (x >> 2) & 1;
-    int x_03 = (x >> 3) & 1;
-    int x_04 = (x >> 4) & 1;
-
-    int x_05 = (x >> 5) & 1;
-    int x_06 = (x >> 6) & 1;
-    int x_07 = (x >> 7) & 1;
-    int x_08 = (x >> 8) & 1;
-    int x_09 = (x >> 9) & 1;
-
-    int x_10 = (x >> 10) & 1;
-    int x_11 = (x >> 11) & 1;
-    int x_12 = (x >> 12) & 1;
-    int x_13 = (x >> 13) & 1;
-    int x_14 = (x >> 14) & 1;
-
-    int x_15 = (x >> 15) & 1;
-    int x_16 = (x >> 16) & 1;
-    int x_17 = (x >> 17) & 1;
-    int x_18 = (x >> 18) & 1;
-    int x_19 = (x >> 19) & 1;
-
-    int x_20 = (x >> 20) & 1;
-    int x_21 = (x >> 21) & 1;
-    int x_22 = (x >> 22) & 1;
-    int x_23 = (x >> 23) & 1;
-    int x_24 = (x >> 24) & 1;
-
-    int x_25 = (x >> 25) & 1;
-    int x_26 = (x >> 26) & 1;
-    int x_27 = (x >> 27) & 1;
-    int x_28 = (x >> 28) & 1;
-    int x_29 = (x >> 29) & 1;
-
-    int x_30 = (x >> 30) & 1;
-    int x_31 = (x >> 31) & 1;
-
-    bit_1_num = x_00 + x_01 + x_02 + x_03 + x_04 +
-                x_05 + x_06 + x_07 + x_08 + x_09 +
-                x_10 + x_11 + x_12 + x_13 + x_14 +
-                x_15 + x_16 + x_17 + x_18 + x_19 +
-                x_20 + x_21 + x_22 + x_23 + x_24 +
-                x_25 + x_26 + x_27 + x_28 + x_29 +
-                x_30 + x_31;
-  }
-
-  int bit_1_num_gt_1 = !!(bit_1_num ^ 1) & !!(bit_1_num ^ 0);
-  int gt_0_and_bit_1_num_eq_1 = (!(bit_1_num ^ 1) & !is_lte_0);
-  int is_0 = !(x ^ 0);
-
-  int add_1 = bit_1_num_gt_1 | gt_0_and_bit_1_num_eq_1 | is_0;
-
-  return top_digit_index + add_1;
+  return index + !!(x ^ 0);
 }
 // float
 /*
@@ -463,7 +358,35 @@ int howManyBits(int x)
  */
 unsigned floatScale2(unsigned uf)
 {
-  return 2;
+  // 规格化：e - (2^(k - 1) - 1)   1 - (2^(k - 1) - 1) = -126
+  // 非规格化：-126 0.75
+
+  int m_shadow = (1 << 23) - 1;
+  unsigned uf_22 = (uf >> 22) & 1;
+  unsigned uf_31 = uf >> 31;
+
+  unsigned s = uf_31 << 31;
+  unsigned exp = (uf >> 23) & 0xFF;
+  unsigned m = uf & m_shadow;
+
+  if (exp == 0xFF)
+    return uf;
+  else if (exp == 0)
+  {
+    if (uf_22 == 1 && m != 0)
+      exp = exp + 1;
+    m = m << 1;
+  }
+  else
+  {
+    exp = exp + 1;
+  }
+
+  unsigned new_exp = (exp & 0xFF) << 23;
+  unsigned new_m = m & m_shadow;
+  unsigned ret = s | new_exp | new_m;
+
+  return ret;
 }
 /*
  * floatFloat2Int - Return bit-level equivalent of expression (int) f
@@ -479,7 +402,30 @@ unsigned floatScale2(unsigned uf)
  */
 int floatFloat2Int(unsigned uf)
 {
-  return 2;
+  const int m_shadow = 8388607; // (1 << 23) - 1;
+  const int m_len = 23;
+  const int bias = 127;
+  const unsigned unvalid = 0x80000000u;
+
+  int exp = (uf >> m_len) & 0xFF;
+  unsigned m = uf & m_shadow;
+
+  int exp_ = exp - bias;
+  if (exp_ > 30)
+    return unvalid;
+  if (exp_ < 0)
+    return 0;
+  if (exp_ == 30 && m)
+    return unvalid;
+
+  int gap = exp_ - m_len;
+  int offset_0 = exp_ > m_len ? m_len : exp_;
+  int shadow = (1 << offset_0) - 1;
+  m = m & (shadow << (m_len - offset_0));
+  m = m << gap;
+
+  int abs = (1 << exp_) | m;
+  return (uf >> 31) ? (~abs + 1) : abs;
 }
 /*
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x
@@ -496,5 +442,25 @@ int floatFloat2Int(unsigned uf)
  */
 unsigned floatPower2(int x)
 {
-  return 2;
+  // min 2^(-126) * 2^(-23)
+  // max 2^(127)
+
+  const unsigned INF = 0X7F800000;
+  const int bias = 127;
+  const int e_min = -126;
+  int e = 0;
+  unsigned m = 0;
+
+  if (x < -149)
+    return 0;
+  if (x >= 128)
+    return INF;
+
+  if (x <= 127 && x >= -126)
+    e = x + bias;
+
+  if (x < -126 && x >= -149)
+    m = 1 << (23 - (e_min - x));
+
+  return e << 23 | m;
 }
