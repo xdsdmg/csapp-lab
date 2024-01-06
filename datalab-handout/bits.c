@@ -358,8 +358,9 @@ int howManyBits(int x)
  */
 unsigned floatScale2(unsigned uf)
 {
-  // 规格化：e - (2^(k - 1) - 1)   1 - (2^(k - 1) - 1) = -126
-  // 非规格化：-126 0.75
+  /// 阶码：
+  /// 规格化：e - (2^(k - 1) - 1)   最小值：1 - (2^(k - 1) - 1) = -126
+  /// 非规格化：-126
 
   int m_shadow = (1 << 23) - 1;
   unsigned uf_22 = (uf >> 22) & 1;
@@ -442,8 +443,8 @@ int floatFloat2Int(unsigned uf)
  */
 unsigned floatPower2(int x)
 {
-  // min 2^(-126) * 2^(-23)
-  // max 2^(127)
+  /// min: 2^(-126) * 2^(-23)
+  /// max: 2^(127)
 
   const unsigned INF = 0X7F800000;
   const int bias = 127;

@@ -1,7 +1,15 @@
-/// Note: 
-///   find the key point of the code.
-///   var associated with 'cmp'. 
+# Bomb Lab phase_6 Analysis
 
+## Note
+  - Find the key point of the code.
+  - Var associated with 'cmp'.
+
+## Code Analysis
+
+### Part 1
+
+Read six number (used as `nums` in the following) from input.
+```
 0x4010f4 <+0>: push   %r14
 0x4010f6 <+2>: push   %r13
 0x4010f8 <+4>: push   %r12
@@ -9,32 +17,37 @@
 0x4010fb <+7>: push   %rbx
 0x4010fc <+8>: sub    $0x50,%rsp
 
-/// Part 1: read six number
 0x401100 <+12>:  mov    %rsp,%r13
 0x401103 <+15>:  mov    %rsp,%rsi
 0x401106 <+18>:  call   0x40145c <read_six_numbers>
+```
 
-/// Part 2: all the numbers should be different from each other 
-///  and less than or equal to 6.
-///
-/// int i = 0;
-/// do 
-/// {
-///   int j = i + 1;
-///   while(j <= 5)
-///   {
-///     if(num[j] == num[i])
-///       bomb();
-///     j++;
-///   }
-/// 
-///   int e = num[i];
-/// 
-///   if (e > 6)
-///     bomb();
-///   i++;
-/// }
-/// while(i < 6)
+### Part 2
+
+All the numbers should be different from each other and less than or equal to 6.
+
+``` C
+/// nums is the six numbers read from Part 1.
+int i = 0;
+do 
+{
+  int j = i + 1;
+  while(j <= 5)
+  {
+    if(nums[j] == nums[i])
+      bomb();
+    j++;
+  }
+
+  int e = nums[i];
+
+  if (e > 6)
+    bomb();
+  i++;
+} while(i < 6)
+```
+
+```
 0x40110b <+23>:  mov    %rsp,%r14
 0x40110e <+26>:  mov    $0x0,%r12d
 0x401114 <+32>:  mov    %r13,%rbp
@@ -57,16 +70,23 @@
 0x40114b <+87>:  jle    0x401135 <phase_6+65>
 0x40114d <+89>:  add    $0x4,%r13
 0x401151 <+93>:  jmp    0x401114 <phase_6+32>
+```
+### Part 3
 
-/// Part 3: num[i] = 7 - num[i], i is in [0, 5].
-/// int *p = num + 6;
-/// int *n = num;
-/// do
-/// {
-///   *n = 7 - *n;
-///   n++;
-/// }
-while(n != p)
+`nums[i] = 7 - nums[i]`, `i` is from `0` to `5`.
+
+``` C
+int *end = nums + 6;
+int *begin = nums;
+
+do
+{
+  *begin = 7 - *begin;
+  begin++;
+} while (begin != end)
+```
+
+```
 0x401153 <+95>:  lea    0x18(%rsp),%rsi
 0x401158 <+100>: mov    %r14,%rax               // $r14 = $rsp
 0x40115b <+103>: mov    $0x7,%ecx
@@ -76,42 +96,65 @@ while(n != p)
 0x401166 <+114>: add    $0x4,%rax
 0x40116a <+118>: cmp    %rsi,%rax
 0x40116d <+121>: jne    0x401160 <phase_6+108>
+```
+### Part 4
 
-/// Part 4: ps[i] = ((7-num[i]) - 1) * 0x8 + link[0]
-/// {0x6032d0, } --> 
-/// int i = 0;
-/// int* ps[6];                     // ps = $rsp + 0x20
-/// do
-/// {
-///   int e = num[i];
-/// 
-///   if (e <= 1)
-///   {
-///     void *p = $0x6032d0;        // 143
-///     ps[0] = p + 2*i;
-///   } else {
-///     int j = 1;
-///     void *p = $0x6032d0;        // 176
-/// 
-///     do
-///     {
-///       p += 0x8;
-///       p = *p;
-///       j++;
-///     }
-///     while(j != e) 
-/// 
-///     ps[j] = p;
-///   }
-/// 
-///   i = i + 0x4;
-/// }
-/// while(i < 0x18)
+Initialize an array (used as `ps` in the following), `ps[i]` equals the address of `list`'s `7-nums[i]`-th node.
+
+``` C
+struct node
+{
+  int data;
+  node *next;
+};
+
+/// The memory layout of list (a linked list):
+/// (gdb) x/14xg 0x6032d0
+/// 0x6032d0 <node1>: 0x000000010000014c  0x00000000006032e0
+/// 0x6032e0 <node2>: 0x00000002000000a8  0x00000000006032f0
+/// 0x6032f0 <node3>: 0x000000030000039c  0x0000000000603300
+/// 0x603300 <node4>: 0x00000004000002b3  0x0000000000603310
+/// 0x603310 <node5>: 0x00000005000001dd  0x0000000000603320
+/// 0x603320 <node6>: 0x00000006000001bb  0x0000000000000000
+node *list = ...; // link = 0x6032d0, the address of list's first node is 0x6032d0
+
+int i = 0;
+node *ps[6]; // ps = $rsp + 0x20
+node *begin = list;
+
+do
+{
+  int num = nums[i];
+
+  if (num <= 1)
+  {
+    node *p = begin; // asm code: <+143>
+    ps[i] = p->next;
+  }
+  else
+  {
+    int j = 1;
+    node *p = begin; // asm code: <+176>
+
+    do
+    {
+      p = p->next;
+      j++;
+    } while (j != num)
+
+        ps[j] = p;
+  }
+
+  i++;
+} while (i < 6)
+```
+
+```
 0x40116f <+123>: mov    $0x0,%esi
 0x401174 <+128>: jmp    0x401197 <phase_6+163>
-// from 130
-// 0x40119f <+171>: mov    $0x1,%eax
-// 0x4011a4 <+176>: mov    $0x6032d0,%edx
+/// from 130
+0x40119f <+171>: mov    $0x1,%eax
+0x4011a4 <+176>: mov    $0x6032d0,%edx
 0x401176 <+130>: mov    0x8(%rdx),%rdx          
 0x40117a <+134>: add    $0x1,%eax
 0x40117d <+137>: cmp    %ecx,%eax
@@ -128,26 +171,33 @@ while(n != p)
 0x40119f <+171>: mov    $0x1,%eax
 0x4011a4 <+176>: mov    $0x6032d0,%edx
 0x4011a9 <+181>: jmp    0x401176 <phase_6+130>
+```
 
-/// Part 5: 
+### Part 5
 
-int a = ps[0];
-int *p = &ps[1];
-int *end = &ps[6];
-int b;
+This part is the most difficult.
+
+``` C
+node *first = ps[0];
+node **second = &ps[1];
+node **last = &ps[6];
+
+int i = 1;
+node *tmp_1 = first; // asm code: <+198>
+node *tmp_2;
+
 do
 {
-  int *tmp = a;
-  *(*tmp + 0x8) = *p;
-  a = *p;
-  b = *p;
-  p++;
-}
-while(end != b)
-*end = 0;
+  tmp_2 = *second;     // asm code: <+201>
+  tmp_1->next = tmp_2; // asm code: <+204>
+  second = &ps[++i];   // asm code: <+208>
+  tmp_1 = tmp_2;       // asm code: <+217>
+} while (i != 6)
 
-int *a = *ps[0]+8;
+tmp_2 = NULL;
+```
 
+```
 0x4011ab <+183>: mov    0x20(%rsp),%rbx
 0x4011b0 <+188>: lea    0x28(%rsp),%rax
 0x4011b5 <+193>: lea    0x50(%rsp),%rsi
@@ -160,6 +210,24 @@ int *a = *ps[0]+8;
 0x4011cd <+217>: mov    %rdx,%rcx
 0x4011d0 <+220>: jmp    0x4011bd <phase_6+201>
 0x4011d2 <+222>: movq   $0x0,0x8(%rdx)
+```
+
+```C
+int i = 5;
+node *iter = link;
+
+do
+{
+  node *p = iter -> next;
+
+  if (p.data >= iter.data)
+    bomb();
+  
+  iter = iter -> next;
+  i--;
+} while(i != 1)
+```
+```
 0x4011da <+230>: mov    $0x5,%ebp
 0x4011df <+235>: mov    0x8(%rbx),%rax              // $rax = ($rsp) + 0x28
 0x4011e3 <+239>: mov    (%rax),%eax                 // $eax = ($rsp + 0x28)
@@ -177,3 +245,4 @@ int *a = *ps[0]+8;
 0x4011ff <+267>: pop    %r13
 0x401201 <+269>: pop    %r14
 0x401203 <+271>: ret   
+```
