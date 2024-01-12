@@ -1,4 +1,4 @@
 gdb:
 	cat exploit.txt | ./hex2raw > input.txt
-	gdb ctarget
+	gdb rtarget
 .PHONY: gdb
