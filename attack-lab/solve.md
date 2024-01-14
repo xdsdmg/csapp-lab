@@ -123,6 +123,8 @@ ec 17 40 00 00 00 00 00   /* The address of touch2 */
 
 ## Level 5
 
+思路参考：https://zhuanlan.zhihu.com/p/476396465
+
 解决这一关的关键是利用 `lea (%rdi,%rsi,1),%rax (address: 0x4019d6)` 指令构造出 cookie 所在地址。
 
 ```
