@@ -18,22 +18,22 @@ ele3:
 
 main:
   irmovq ele1, %rsi
-  call sum_list       # sum_list(&ele1)
+  call rsum_list       # rsum_list(&ele1)
   ret
 
-sum_list:
-  xorq %rax, %rax     # sum = 0
-  jmp test            # Goto test
-
-loop:
-  mrmovq (%rsi), %r10       # Get value
-  addq %r10, %rax           # Add to sum
+rsum_list:
+  pushq %rbx
+  mrmovq (%rsi), %rbx
+  xorq %rax, %rax           # sum = 0
+  andq %rsi, %rsi           # Set CC
+  je L35
   mrmovq 0x8(%rsi), %rsi    # p = p -> next
+  call rsum_list
+  addq %rbx, %rax
 
-test:
-  andq %rsi, %rsi     # Set CC
-  jne loop            # Stop when 0
-  ret                 # Return
+L35:
+  popq %rbx
+  ret
 
 # Stack starts here and grows to lower addresses
   .pos 0x200
