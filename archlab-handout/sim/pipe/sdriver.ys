@@ -27,25 +27,97 @@ StartFun:
 ncopy:
 
 ##################################################################
+# /*
+# * ncopy - copy src to dst, returning number of positive ints
+# * contained in src array.
+# */
+# word_t ncopy(word_t *src, word_t *dst, word_t len)
+# {
+#		word_t count = 0;
+#		word_t val;
+#
+#		while (len > 0) {
+#			val = *src++;
+#			*dst++ = val;
+#			if (val > 0)
+#				count++;
+#			len--;
+#		}
+#		return count;
+# }
+
 # You can modify this portion
 	# Loop header
 	xorq %rax,%rax		# count = 0;
-	andq %rdx,%rdx		# len <= 0?
-	jle Done		# if so, goto Done:
+	iaddq $-6, %rdx		# len - 6 <= 0?
+	jle Post 			# if so, goto Post:
 
-Loop:	mrmovq (%rdi), %r10	# read val from src...
-	rmmovq %r10, (%rsi)	# ...and store it to dst
-	andq %r10, %r10		# val <= 0?
-	jle Npos		# if so, goto Npos:
-	irmovq $1, %r10
-	addq %r10, %rax		# count++
-Npos:	irmovq $1, %r10
-	subq %r10, %rdx		# len--
-	irmovq $8, %r10
-	addq %r10, %rdi		# src++
-	addq %r10, %rsi		# dst++
-	andq %rdx,%rdx		# len > 0?
-	jg Loop			# if so, goto Loop:
+Loop_1:	
+	mrmovq (%rdi), %r10					# read val from src...
+	mrmovq $8(%rdi), %r9				# read val from src...
+	andq %r10, %r10						# val <= 0?
+	rmmovq %r10, (%rsi)					# ...and store it to dst
+	rmmovq %r9, $8(%rsi)				# ...and store it to dst
+	jle Npos_1							# if so, goto Npos_1:
+	iaddq $1, %rax						# count_1++
+
+Npos_1:
+	andq %r9, %r9						# val <= 0?
+	jle Npos_2							# if so, goto Npos_2:
+	iaddq $1, %rax						# count_1++
+
+Npos_2:	
+	mrmovq $16(%rdi), %r11				# read val from src...
+	mrmovq $24(%rdi), %r12				# read val from src...
+	andq %r11, %r11						# val <= 0?
+	rmmovq %r11, $16(%rsi)				# ...and store it to dst
+	rmmovq %r12, $24(%rsi)				# ...and store it to dst
+	jle Npos_3							# if so, goto Npos_1:
+	iaddq $1, %rax						# count_1++
+
+Npos_3:
+	andq %r12, %r12						# val <= 0?
+	jle Npos_4							# if so, goto Npos_2:
+	iaddq $1, %rax						# count_1++
+
+Npos_4:	
+	mrmovq $32(%rdi), %r13				# read val from src...
+	mrmovq $40(%rdi), %r14				# read val from src...
+	andq %r13, %r13						# val <= 0?
+	rmmovq %r13, $32(%rsi)					# ...and store it to dst
+	rmmovq %r14, $40(%rsi)				# ...and store it to dst
+	jle Npos_5							# if so, goto Npos_1:
+	iaddq $1, %rax						# count_1++
+
+Npos_5:
+	andq %r14, %r14						# val <= 0?
+	jle Npos_6							# if so, goto Npos_2:
+	iaddq $1, %rax						# count_1++
+
+Npos_6:
+	iaddq $48, %rdi		# src+=6
+	iaddq $48, %rsi		# dst+=6
+	iaddq $-6, %rdx		# len-=6
+
+	jge Loop_1			# if so, goto Loop:
+
+Post:
+	iaddq $6, %rdx
+	jle Done			# if so, goto Done:
+
+Loop_2:	
+	mrmovq (%rdi), %r10		# read val from src...
+	andq %r10, %r10			# val <= 0?
+	rmmovq %r10, (%rsi)		# ...and store it to dst
+	jle Npos_7				# if so, goto Npos:
+	iaddq $1, %rax			# count++
+
+Npos_7:	
+	iaddq $8, %rdi		# src++
+	iaddq $8, %rsi		# dst++
+	iaddq $-1, %rdx		# len--
+	jg Loop_2			# if so, goto Loop_2:
+
 ##################################################################
 # Do not modify the following section of code
 # Function epilogue.
@@ -62,10 +134,10 @@ EndFun:
 ###############################
 	.align 8
 src:
-	.quad -1
-	.quad -2
-	.quad 3
-	.quad 4
+	.quad 1
+	.quad 2
+	.quad -3
+	.quad -4
 	.quad 0xbcdefa # This shouldn't get moved
 
 	.align 16

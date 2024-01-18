@@ -17,14 +17,14 @@ TKLIBS=-L/usr/lib -ltk -ltcl
 # header files on your system. Comment this out if you don't have
 # Tcl/Tk.
 
-TKINC=-isystem /usr/include/tcl8.5
+TKINC=-isystem /usr/include/tcl8.6
 
 # Modify these two lines to choose your compiler and compile time
 # flags.
 
 CC=gcc
-# CFLAGS=-Wall -O2
-CFLAGS=-Wall -O2 -fcommon
+# CFLAGS=-DUSE_INTERP_RESULT -Wall -O2
+CFLAGS=-DUSE_INTERP_RESULT -Wall -O2 -fcommon
 
 ##################################################
 # You shouldn't need to modify anything below here
@@ -61,4 +61,16 @@ drivers:
 clean:
 	rm -f psim pipe-*.c *.o *.exe *~ 
 
+build: 
+	make VERSION=full
+	./psim -t sdriver.yo  																				# To test your solution on a small 4-element array.
+	./psim -t ldriver.yo																					# To test your solution on a larger 63-element array.
+	make drivers
+	../misc/yis sdriver.yo																				# Testing your driver files on the ISA simulator. Make sure that your ncopy.ys function works properly with YIS.
+	./correctness.pl																							# Testing your code on a range of block lengths with the ISA simulator.	
+	cd ../y86-code; make testpsim 																# Testing your pipeline simulator with extensive regression tests.
+	cd ../ptest; make SIM=../pipe/psim TFLAGS=-i 									# Testing your pipeline simulator with extensive regression tests.
 
+test:
+	./correctness.pl -p
+	./benchmark.pl
