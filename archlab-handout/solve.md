@@ -18,6 +18,14 @@
 sudo apt install flex bison tcl tcl-dev tk tk-dev
 ```
 
+### 编译
+
+进入解压后的 sim 目录，执行下面命令：
+
+``` shell
+make clean; make
+```
+
 ## Part A
 
 - [sum_list](./sim/misc/sum.ys)
