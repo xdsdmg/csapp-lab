@@ -1,11 +1,11 @@
 #######################################################################
-# Test for copying block of size K;
+# Test for copying block of size 6;
 #######################################################################
 	.pos 0
 main:	irmovq Stack, %rsp  	# Set up stack pointer
 
 	# Set up arguments for copy function and then invoke it
-	irmovq $K, %rdx		# src and dst have K elements
+	irmovq $6, %rdx		# src and dst have 6 elements
 	irmovq dest, %rsi	# dst array
 	irmovq src, %rdi	# src array
 	call ncopy		 
@@ -28,25 +28,135 @@ StartFun:
 ncopy:
 
 ##################################################################
+# /*
+# * ncopy - copy src to dst, returning number of positive ints
+# * contained in src array.
+# */
+# word_t ncopy(word_t *src, word_t *dst, word_t len)
+# {
+#		word_t count = 0;
+#		word_t val;
+#
+#		while (len > 0) {
+#			val = *src++;
+#			*dst++ = val;
+#			if (val > 0)
+#				count++;
+#			len--;
+#		}
+#		return count;
+# }
+
 # You can modify this portion
 	# Loop header
 	xorq %rax,%rax		# count = 0;
-	andq %rdx,%rdx		# len <= 0?
-	jle Done		# if so, goto Done:
+	iaddq $-6, %rdx		# len - 6 <= 0?
+	jl Post 			# if so, goto Post:
 
-Loop:	mrmovq (%rdi), %r10	# read val from src...
-	rmmovq %r10, (%rsi)	# ...and store it to dst
-	andq %r10, %r10		# val <= 0?
-	jle Npos		# if so, goto Npos:
-	irmovq $1, %r10
-	addq %r10, %rax		# count++
-Npos:	irmovq $1, %r10
-	subq %r10, %rdx		# len--
-	irmovq $8, %r10
-	addq %r10, %rdi		# src++
-	addq %r10, %rsi		# dst++
-	andq %rdx,%rdx		# len > 0?
-	jg Loop			# if so, goto Loop:
+Loop_1:	
+	mrmovq (%rdi), %r10					# read val from src...
+	mrmovq $8(%rdi), %r9				# read val from src...
+	andq %r10, %r10						# val <= 0?
+	rmmovq %r10, (%rsi)					# ...and store it to dst
+	rmmovq %r9, $8(%rsi)				# ...and store it to dst
+	jle Npos_1							# if so, goto Npos_1:
+	iaddq $1, %rax						# count_1++
+
+Npos_1:
+	andq %r9, %r9						# val <= 0?
+	jle Npos_2							# if so, goto Npos_2:
+	iaddq $1, %rax						# count_1++
+
+Npos_2:	
+	mrmovq $16(%rdi), %r11				# read val from src...
+	mrmovq $24(%rdi), %r12				# read val from src...
+	andq %r11, %r11						# val <= 0?
+	rmmovq %r11, $16(%rsi)				# ...and store it to dst
+	rmmovq %r12, $24(%rsi)				# ...and store it to dst
+	jle Npos_3							# if so, goto Npos_1:
+	iaddq $1, %rax						# count_1++
+
+Npos_3:
+	andq %r12, %r12						# val <= 0?
+	jle Npos_4							# if so, goto Npos_2:
+	iaddq $1, %rax						# count_1++
+
+Npos_4:	
+	mrmovq $32(%rdi), %r13				# read val from src...
+	mrmovq $40(%rdi), %r14				# read val from src...
+	andq %r13, %r13						# val <= 0?
+	rmmovq %r13, $32(%rsi)				# ...and store it to dst
+	rmmovq %r14, $40(%rsi)				# ...and store it to dst
+	jle Npos_5							# if so, goto Npos_1:
+	iaddq $1, %rax						# count_1++
+
+Npos_5:
+	andq %r14, %r14						# val <= 0?
+	jle Npos_6							# if so, goto Npos_2:
+	iaddq $1, %rax						# count_1++
+
+Npos_6:
+	iaddq $48, %rdi		# src+=6
+	iaddq $48, %rsi		# dst+=6
+	iaddq $-6, %rdx		# len-=6
+
+	jge Loop_1			# if so, goto Loop:
+
+Post:
+	iaddq $6, %rdx
+	jle Done			# if so, goto Done:
+
+# 5, 4, 3, 2, 1
+Jump_1:
+	iaddq $-3, %rdx
+	jg Jump_2
+	je R3
+	jl Jump_3
+
+# 5, 4
+Jump_2:
+	iaddq $-1, %rdx 		# %rdx + 3 - 4
+	jg R5
+	jle R4
+
+# 2, 1
+Jump_3:
+	iaddq $2, %rdx 		# %rdx + 3 - 1
+	jg R2
+	jle R1
+
+R5:
+	mrmovq 32(%rdi), %r10	# read val from src...
+	andq %r10, %r10			# val <= 0?
+	rmmovq %r10, 32(%rsi)	# ...and store it to dst
+	jle R4					# if so, goto Npos:
+	iaddq $1, %rax			# count++	
+
+R4:
+	mrmovq $24(%rdi), %r10	# read val from src...
+	andq %r10, %r10			# val <= 0?
+	rmmovq %r10, $24(%rsi)	# ...and store it to dst
+	jle R3					# if so, goto Npos:
+	iaddq $1, %rax			# count++	
+R3:
+	mrmovq $16(%rdi), %r10	# read val from src...
+	andq %r10, %r10			# val <= 0?
+	rmmovq %r10, $16(%rsi)	# ...and store it to dst
+	jle R2					# if so, goto Npos:
+	iaddq $1, %rax			# count++	
+R2:
+	mrmovq $8(%rdi), %r10	# read val from src...
+	andq %r10, %r10			# val <= 0?
+	rmmovq %r10, $8(%rsi)	# ...and store it to dst
+	jle R1					# if so, goto Npos:
+	iaddq $1, %rax			# count++	
+R1:
+	mrmovq (%rdi), %r10		# read val from src...
+	andq %r10, %r10			# val <= 0?
+	rmmovq %r10, (%rsi)		# ...and store it to dst
+	jle Done				# if so, goto Npos:
+	iaddq $1, %rax			# count++	
+
 ##################################################################
 # Do not modify the following section of code
 # Function epilogue.
@@ -63,7 +173,7 @@ EndFun:
 
 # This is the correctness checking code.
 # It checks:
-#   1. %rax has 0.  Set %rax to 0xbbbb if not.
+#   1. %rax has 2.  Set %rax to 0xbbbb if not.
 #   2. The total length of the code is less than or equal to 1000.
 #      Set %rax to 0xcccc if not.
 #   3. The source data was copied to the destination.
@@ -73,7 +183,7 @@ EndFun:
 # If all checks pass, then sets %rax to 0xaaaa
 check:
 	# Return value test
-	irmovq $0,%r10
+	irmovq $2,%r10
 	subq %r10,%rax
 	je checkb
 	irmovq $0xbbbb,%rax  # Failed test #1
@@ -91,7 +201,7 @@ checkb:
 checkm:
 	irmovq dest, %rdx # Pointer to next destination location
 	irmovq src,%rbx   # Pointer to next source location
-	irmovq $K,%rdi  # Count
+	irmovq $6,%rdi  # Count
 	andq %rdi,%rdi
 	je checkpre         # Skip check if count = 0
 mcloop:
@@ -137,12 +247,24 @@ cdone:
 ###############################
 	.align 8
 src:
+	.quad 1
+	.quad -2
+	.quad -3
+	.quad -4
+	.quad -5
+	.quad 6
 	.quad 0xbcdefa # This shouldn't get moved
 
 	.align 16
 Predest:
 	.quad 0xbcdefa
 dest:
+	.quad 0xcdefab
+	.quad 0xcdefab
+	.quad 0xcdefab
+	.quad 0xcdefab
+	.quad 0xcdefab
+	.quad 0xcdefab
 Postdest:
 	.quad 0xdefabc
 
