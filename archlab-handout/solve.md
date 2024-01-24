@@ -82,6 +82,6 @@ Score 41.5/60.0
 后来尝试了下，并把循环展开扩展到 8 项，可以得到如下分数：
 
 ``` plain
-Average CPE 7.95
-Score 51.0/60.0
+Average CPE 7.87
+Score 52.5/60.0
 ```

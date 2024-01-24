@@ -35,7 +35,6 @@ ncopy:
 
 # You can modify this portion
 	# Loop header
-	xorq %rax,%rax		# count = 0;
 	iaddq $-8, %rdx		# len - 6 <= 0?
 	jl Post 			# if so, goto Post:
 

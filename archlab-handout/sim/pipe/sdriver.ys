@@ -48,7 +48,6 @@ ncopy:
 
 # You can modify this portion
 	# Loop header
-	xorq %rax,%rax		# count = 0;
 	iaddq $-8, %rdx		# len - 6 <= 0?
 	jl Post 			# if so, goto Post:
 
@@ -203,8 +202,8 @@ EndFun:
 	.align 8
 src:
 	.quad 1
-	.quad -2
-	.quad 3
+	.quad 2
+	.quad -3
 	.quad -4
 	.quad 0xbcdefa # This shouldn't get moved
 

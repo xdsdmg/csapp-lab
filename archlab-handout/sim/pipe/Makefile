@@ -39,7 +39,8 @@ YAS = ../misc/yas
 all: psim drivers
 
 # This rule builds the PIPE simulator
-psim: psim.c sim.h pipe-$(VERSION).hcl $(MISCDIR)/isa.c $(MISCDIR)/isa.h
+psim: 
+	# psim.c sim.h pipe-$(VERSION).hcl $(MISCDIR)/isa.c $(MISCDIR)/isa.h
 	# Building the pipe-$(VERSION).hcl version of PIPE
 	$(HCL2C) -n pipe-$(VERSION).hcl < pipe-$(VERSION).hcl > pipe-$(VERSION).c
 	$(CC) $(CFLAGS) $(INC) -o psim psim.c pipe-$(VERSION).c \
