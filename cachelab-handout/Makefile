@@ -35,3 +35,6 @@ clean:
 test:
 	make clean && make csim
 	./csim -s 4 -E 1 -b 4 -v -t traces/yi.trace
+
+ref:
+	./csim-ref -s 4 -E 1 -b 4 -v -t traces/yi.trace

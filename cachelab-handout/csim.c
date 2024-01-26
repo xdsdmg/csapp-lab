@@ -60,6 +60,48 @@ void parse_trace_line(char line[100], int s, int b, char *op, uint64_t *addr, in
     *set = (*addr >> b) & ((1 << s) - 1);
 }
 
+bool is_hit(struct cache_line *cache, int clock, int E, uint64_t tag)
+{
+    for (int i = 0; i < E; i++)
+    {
+        if (cache[i].is_valid && cache[i].tag == tag)
+        {
+            cache[i].timestamp = clock;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool is_evicted(struct cache_line *cache, int clock, int E)
+{
+
+    for (int i = 0; i < E; i++)
+    {
+        if (!cache[i].is_valid)
+        {
+            cache[i].is_valid = true;
+            cache[i].timestamp = clock;
+            return false;
+        }
+    }
+    return true;
+}
+
+void evict(struct cache_line *cache, int clock, int E)
+{
+    int index = 0, min_clock = cache[0].timestamp;
+    for (int i = 1; i < E; i++)
+    {
+        if (cache[i].timestamp < min_clock)
+        {
+            index = i;
+            min_clock = cache[i].timestamp;
+        }
+    }
+    cache[index].timestamp = clock;
+}
+
 int main(int argc, char *argv[])
 {
     int s, E, b, t;
@@ -83,7 +125,7 @@ int main(int argc, char *argv[])
         if (line[0] != 32)
             continue;
 
-        printf("line: %s", line);
+        // printf("line: %s", line);
 
         int size;
         uint64_t addr, set, tag;
@@ -94,98 +136,26 @@ int main(int argc, char *argv[])
         bool hit = false, miss = false, eviction = false;
         if (op == 'L')
         {
-            for (int i = 0; i < E; i++)
-            {
-                if (cache[base + i].is_valid && cache[base + i].tag == tag)
-                {
-                    hit = true;
-                    cache[base + i].timestamp = clock;
-                    break;
-                }
-            }
-            if (!hit)
+            if (!(hit = is_hit(cache + base, clock, E, tag)))
             {
                 miss = true;
-                int i = 0;
-                for (; i < E; i++)
-                {
-                    if (!cache[base + i].is_valid)
-                    {
-                        cache[base + i].is_valid = true;
-                        cache[base + i].timestamp = clock;
-                        break;
-                    }
-                }
-                if (i == E)
-                {
-                    eviction = true;
-                    int index = 0, min_clock = cache[base].timestamp;
-                    for (int i = 1; i < E; i++)
-                    {
-                        if (cache[base + i].timestamp < min_clock)
-                        {
-                            index = i;
-                            min_clock = cache[base + i].timestamp;
-                        }
-                    }
-                    cache[base + index].timestamp = clock;
-                }
+                if ((eviction = is_evicted(cache + base, clock, E)))
+                    evict(cache + base, clock, E);
             }
         }
         else if (op == 'M')
         {
-            for (int i = 0; i < E; i++)
-            {
-                if (cache[base + i].is_valid && cache[base + i].tag == tag)
-                {
-                    hit = true;
-                    cache[base + i].timestamp = clock;
-                    break;
-                }
-            }
-            if (!hit)
+            if (!(hit = is_hit(cache + base, clock, E, tag)))
             {
                 miss = true;
-                int i = 0;
-                for (; i < E; i++)
-                {
-                    if (!cache[base + i].is_valid)
-                    {
-                        cache[base + i].is_valid = true;
-                        cache[base + i].timestamp = clock;
-                        break;
-                    }
-                }
-                if (i == E)
-                {
-                    eviction = true;
-                    int index = 0, min_clock = cache[base].timestamp;
-                    for (int i = 1; i < E; i++)
-                    {
-                        if (cache[base + i].timestamp < min_clock)
-                        {
-                            index = i;
-                            min_clock = cache[base + i].timestamp;
-                        }
-                    }
-                    cache[base + index].timestamp = clock;
-                }
+                if ((eviction = is_evicted(cache + base, clock, E)))
+                    evict(cache + base, clock, E);
             }
         }
         else if (op == 'S')
-        {
-            for (int i = 0; i < E; i++)
-            {
-                if (cache[base + i].is_valid && cache[base + i].tag == tag)
-                {
-                    hit = true;
-                    cache[base + i].timestamp = clock;
-                    break;
-                }
-            }
-        }
+            hit = is_hit(cache + base, clock, E, tag);
 
-        printf("op: %c, size: %d, addr: %lX, set: %lX, tag: %lX\n", op, size, addr, set, tag);
+        // printf("op: %c, size: %d, addr: %lX, set: %lX, tag: %lX\n", op, size, addr, set, tag);
         printf("hit: %d, miss: %d, eviction: %d\n", hit, miss, eviction);
     }
     fclose(file);
