@@ -5,3 +5,4 @@
 - [Bomb Lab phase_6 Analysis](./bomb/solve.md)
 - [Attack Lab Analysis](./attack-lab/solve.md)
 - [Arch Lab Analysis](./archlab-handout/solve.md)
+- [Cache Lab](./cachelab-handout/solve.md)
