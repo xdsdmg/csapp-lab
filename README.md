@@ -8,4 +8,5 @@
 - [Arch Lab Analysis](./archlab-handout/solve.md)
 - [Cache Lab](./cachelab-handout/solve.md)
 - [Shell Lab](./shlab-handout/tsh.c)
+- [Malloc Lab](./malloclab-handout/solve.md)
 
