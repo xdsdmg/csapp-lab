@@ -5,8 +5,7 @@
 - [CSAPP:Lab5-Malloc Lab](https://zhuanlan.zhihu.com/p/150100073)
 - [CSAPP:Lab5-Malloc Lab](https://zero4drift.github.io/posts/csapp-malloclab-jie-ti-si-lu-ji-lu/)
 
-
-
+## Layout
 +---------+
 |0       1|
 +---------+
@@ -37,3 +36,6 @@
 |0        |
 +---------+ <-- mem_start_brk 
 
+## Answer
+
+- [mm.c](./mm.c)
