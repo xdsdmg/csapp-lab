@@ -9,4 +9,4 @@
 - [Cache Lab](./cachelab-handout/solve.md)
 - [Shell Lab](./shlab-handout/tsh.c)
 - [Malloc Lab](./malloclab-handout/solve.md)
-
+- [Proxy Lab](./proxylab-handout/proxy.c)
