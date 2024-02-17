@@ -95,7 +95,6 @@ int parse_request(int conn_fd, Request *req) {
   req->method = method;
   req->uri = uri;
   req->version = version;
-  // req->headers = headers;
 
   return 0;
 }
